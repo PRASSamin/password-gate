@@ -1,0 +1,48 @@
+{
+  "manifest_version": 2,
+  "name": "Password Gate",
+  "version": "1.0",
+  "description": "Protects specific websites with a password",
+  "icons": {
+    "16": "media/icon16.png",
+    "32": "media/icon32.png",
+    "48": "media/icon48.png",
+    "128": "media/icon128.png"
+  },
+  
+  "permissions": [
+    "storage",
+    "webNavigation",
+    "tabs",
+    "activeTab" 
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "browser_action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "media/icon16.png",
+      "32": "media/icon32.png",
+      "48": "media/icon48.png",
+      "128": "media/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"  
+      ],
+      "js": ["content.js", "devtools.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    "locked.html",
+    "locked.js",
+    "locked.css",
+    "popup/popup.css"
+  ],
+  "content_security_policy": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline'"
+}
