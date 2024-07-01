@@ -1,6 +1,6 @@
 # Chrome Extension: [Your Extension Name]
 
-![Extension Icon](icons/icon128.png)
+![Extension Icon](media/icon128.png)
 
 ## Description
 Password Gate is a Chrome extension that [briefly describe what your extension does].
