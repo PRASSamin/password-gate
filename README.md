@@ -1,4 +1,4 @@
-# Chrome Extension: [Your Extension Name]
+# Chrome Extension: Password Gate
 
 ![Extension Icon](media/icon128.png)
 
