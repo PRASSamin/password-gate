@@ -6,12 +6,10 @@ function clearExpiredPasswords() {
         let hasChanges = false;
         
         Object.keys(recentPasswords).forEach(hostname => {
-          console.log('Recent passwords:', recentPasswords[hostname]);
+          console.log('Recent passwords:', recentPasswords[hostname].addedTime);
           if (currentTime > recentPasswords[hostname].addedTime + 600000) {
-            chrome.storage.local.remove(hostname, () => {
-              delete recentPasswords[hostname];
-              hasChanges = true;
-            });
+            delete recentPasswords[hostname];
+            hasChanges = true;
           }
         });
   

@@ -440,16 +440,16 @@ function getStoredPassword() {
 }
 
 function getRecentPassword() {
-  return getStorageData('local', 'recentPasswords', location.hostname);
+  return getStorageData('recentPasswords', location.hostname);
 }
 
 function getIncorrectHistory() {
-  return getStorageData('local', 'failedAttemptsData', location.hostname);
+  return getStorageData('failedAttemptsData', location.hostname);
 }
 
-function getStorageData(storageArea, key, hostname) {
+function getStorageData(key, hostname) {
   return new Promise((resolve, reject) => {
-    chrome.storage[storageArea].get([key], function(result) {
+    chrome.storage.local.get([key], function(result) {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError.message);
       } else {
