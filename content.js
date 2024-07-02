@@ -453,7 +453,7 @@ function getStorageData(key, hostname) {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError.message);
       } else {
-        const data = result[key] || {};
+        const data = result.failedAttemptsData || {};
         resolve(data[hostname]);
       }
     });
