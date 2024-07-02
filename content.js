@@ -14,9 +14,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 function handlePasswordCheck(sendResponse) {
-  clearExpiredPasswords()
-    .then(clearFailedAttempts)
-    .then(getIncorrectHistory)
+  clearFailedAttempts().then(getIncorrectHistory)
     .then((result) => {
       if (result && result.incorrectAttempts === 3) {
         document.body.innerHTML = "Too many incorrect attempts, please try again later.";
@@ -31,7 +29,7 @@ function handlePasswordCheck(sendResponse) {
     .then((result) => {
       if (result && result.password) {
         sendResponse({ status: "already_saved" });
-        closePasswordPrompt();
+        return;
       } else {
         showPasswordPrompt(sendResponse);
       }
@@ -421,21 +419,16 @@ function showPasswordPrompt(callback) {
 function handleAttemptResult(callback) {
   return function(response) {
     if (response.status === "success") {
-      storeRecentPassword(document.getElementById("password").value);
-      closePasswordPrompt();
       callback(response);
     } else if (response.status === "locked") {
-      window.location.href = "your_locked_url_here";
+      const lockedPageUrl = chrome.runtime.getURL("locked.html");
+      const lockedsiteUrl = encodeURIComponent(window.location.href);
+    const urlWithParams = `${lockedPageUrl}?attempts=${siteData.incorrectAttempts}&cooldown=${siteData.cooldownEnd}&url=${lockedsiteUrl}`;
+    window.location.href = urlWithParams;
     } else {
       displayAttemptMessage(response.message);
     }
   };
-}
-
-function closePasswordPrompt() {
-  isPromptShown = false;
-  chrome.runtime.sendMessage({ action: "passwordPromptClosed" });
-  document.body.removeChild(passwordPrompt);
 }
 
 function getStoredPassword() {
@@ -474,40 +467,17 @@ function storeRecentPassword(password) {
       addedTime: Date.now()
     }
   };
-  return updateStorageData('local', 'recentPasswords', data);
+  return updateStorageData('recentPasswords', data);
 }
 
-function updateStorageData(storageArea, key, newData) {
+function updateStorageData(key, newData) {
   return new Promise((resolve, reject) => {
-    chrome.storage[storageArea].get([key], function(result) {
+    chrome.storage.local.get([key], function(result) {
       let existingData = result[key] || {};
       let updatedData = { ...existingData, ...newData };
-      chrome.storage[storageArea].set({ [key]: updatedData }, function() {
+      chrome.storage.local.set({ [key]: updatedData }, function() {
         chrome.runtime.lastError ? reject(chrome.runtime.lastError.message) : resolve();
       });
-    });
-  });
-}
-
-function clearExpiredPasswords() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(['recentPasswords'], function(result) {
-      let recentPasswords = result.recentPasswords || {};
-      const currentTime = Date.now();
-      let hasChanges = false;
-
-      Object.keys(recentPasswords).forEach(hostname => {
-        if (currentTime > recentPasswords[hostname].addedTime + 600000) {
-          delete recentPasswords[hostname];
-          hasChanges = true;
-        }
-      });
-
-      if (hasChanges) {
-        chrome.storage.local.set({ recentPasswords }, () => resolve(true));
-      } else {
-        resolve(false);
-      }
     });
   });
 }
@@ -533,6 +503,11 @@ function checkAttempts(storedPassword, inputPassword, callback) {
     }
 
     if (inputPassword === storedPassword) {
+      storeRecentPassword(inputPassword);
+      callback({ status: "success" });
+      isPromptShown = false;
+      chrome.runtime.sendMessage({ action: "passwordPromptClosed" });
+      document.body.removeChild(passwordPrompt);
       resetAttempts(failedAttemptsData, hostname, callback);
     } else {
       handleFailedAttempt(failedAttemptsData, hostname, siteData, maxAttempts, cooldownTime, currentTime, callback);

@@ -34,7 +34,7 @@
       "matches": [
         "<all_urls>"  
       ],
-      "js": ["content.js", "devtools.js"],
+      "js": ["content.js", "devtools.js", "clear.js"],
       "run_at": "document_idle"
     }
   ],
