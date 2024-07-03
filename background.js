@@ -84,3 +84,58 @@ chrome.webNavigation.onCompleted.addListener((details) => {
     });
   }
 });
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: 'alreadyAdded',
+    title: 'Already added to Password Gate',
+    contexts: ['page'],
+    enabled: false  
+  });
+
+  chrome.contextMenus.create({
+    id: 'addThisSite',
+    title: 'Add to Password Gate',
+    contexts: ['page']
+  });
+});
+
+function updateContextMenu() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length === 0) return;
+
+    const currentUrl = new URL(tabs[0].url).origin;
+    chrome.storage.local.get({ protectedSites: [] }, (data) => {
+      const protectedSites = data.protectedSites;
+      if (protectedSites.includes(currentUrl)) {
+        chrome.contextMenus.update('alreadyAdded', { visible: true });
+        chrome.contextMenus.update('addThisSite', { visible: false });
+      } else {
+        chrome.contextMenus.update('alreadyAdded', { visible: false });
+        chrome.contextMenus.update('addThisSite', { visible: true });
+      }
+    });
+  });
+}
+
+function addSiteToProtectedList(currentUrl) {
+  chrome.storage.local.get({ protectedSites: [] }, (data) => {
+    const protectedSites = data.protectedSites;
+      protectedSites.push(currentUrl);
+      chrome.storage.local.set({ protectedSites: protectedSites }, () => {
+        updateContextMenu();
+      });
+  });
+}
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'addThisSite') {
+    const currentUrl = new URL(tab.url).origin;
+    addSiteToProtectedList(currentUrl);
+  }
+});
+
+chrome.tabs.onActivated.addListener(updateContextMenu);
+chrome.tabs.onUpdated.addListener(updateContextMenu);
+
+updateContextMenu();
